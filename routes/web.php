@@ -5,7 +5,6 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\JadwalImamController;
 use App\Http\Controllers\KeuanganController;
 use App\Http\Controllers\PengajianController;
-use App\Models\JadwalImam;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -13,41 +12,65 @@ use Illuminate\Support\Facades\Route;
 | Web Routes
 |--------------------------------------------------------------------------
 |
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
+| Route ini dipakai untuk halaman web (Blade).
+| Endpoint API JSON untuk Postman sebaiknya ditaruh di routes/api.php
 |
 */
 
+// ======================
+// Guest Routes (belum login)
+// ======================
 Route::middleware('guest')->group(function () {
+    // Halaman login (Blade)
     Route::get('/login', [AuthController::class, 'index'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->name('login.auth');
-    Route::get('/',[DashboardController::class,'home'])->name('home');
-    Route::get('/imam-khotib',[JadwalImamController::class,'index'])->name('imamkhotib');
-    Route::get('/kegiatan', [PengajianController::class,'index'])->name('kegiatan');
+    Route::post('/login', [AuthController::class, 'webLogin'])->name('login.auth');
+
+    // Halaman publik
+    Route::get('/', [DashboardController::class, 'home'])->name('home');
+    Route::get('/imam-khotib', [JadwalImamController::class, 'index'])->name('imamkhotib');
+    Route::get('/kegiatan', [PengajianController::class, 'index'])->name('kegiatan');
     Route::get('/keuangan', [KeuanganController::class, 'index'])->name('guest.keuangan.index');
 });
 
+// ======================
+// Authenticated Routes (sudah login)
+// ======================
 Route::middleware('auth')->group(function () {
+    // Dashboard admin
     Route::get('/admin', [DashboardController::class, 'index'])->name('dashboard');
 
-    // keuangan
-    Route::get('/admin/keuangan', [KeuanganController::class, 'index'])->name('keuangan');
-    Route::post('/admin/keuangan', [KeuanganController::class, 'store'])->name('keuangan.input');
-    Route::put('/admin/keuangan/{id}', [KeuanganController::class, 'update'])->name('keuangan.update');
-    Route::delete('/admin/keuangan/{id}', [KeuanganController::class, 'destroy'])->name('keuangan.delete');
+    // ======================
+    // CRUD Keuangan
+    // ======================
+    Route::prefix('admin/keuangan')->name('keuangan.')->group(function () {
+        Route::get('/', [KeuanganController::class, 'index'])->name('index');
+        Route::post('/', [KeuanganController::class, 'store'])->name('store');
+        Route::put('/{id}', [KeuanganController::class, 'update'])->name('update');
+        Route::delete('/{id}', [KeuanganController::class, 'destroy'])->name('destroy');
+    });
 
-    // pengajian
-    Route::get('/admin/pengajian', [PengajianController::class, 'index'])->name('pengajian');
-    Route::post('/admin/pengajian', [PengajianController::class, 'store'])->name('pengajian.input');
-    Route::put('/admin/pengajian/{id}', [PengajianController::class, 'update'])->name('pengajian.update');
-    Route::delete('/admin/pengajian/{id}', [PengajianController::class, 'destroy'])->name('pengajian.delete');
+    // ======================
+    // CRUD Pengajian
+    // ======================
+    Route::prefix('admin/pengajian')->name('pengajian.')->group(function () {
+        Route::get('/', [PengajianController::class, 'index'])->name('index');
+        Route::post('/', [PengajianController::class, 'store'])->name('store');
+        Route::put('/{id}', [PengajianController::class, 'update'])->name('update');
+        Route::delete('/{id}', [PengajianController::class, 'destroy'])->name('destroy');
+    });
 
-    // jadwal imam
-    Route::get('/admin/imam', [JadwalImamController::class, 'index'])->name('imam');
-    Route::post('/admin/imam', [JadwalImamController::class, 'store'])->name('imam.input');
-    Route::put('/admin/imam/{id}', [JadwalImamController::class, 'update'])->name('imam.update');
-    Route::delete('/admin/imam/{id}', [JadwalImamController::class, 'destroy'])->name('imam.delete');
+    // ======================
+    // CRUD Jadwal Imam
+    // ======================
+    Route::prefix('admin/imam')->name('imam.')->group(function () {
+        Route::get('/', [JadwalImamController::class, 'index'])->name('index');
+        Route::post('/', [JadwalImamController::class, 'store'])->name('store');
+        Route::put('/{id}', [JadwalImamController::class, 'update'])->name('update');
+        Route::delete('/{id}', [JadwalImamController::class, 'destroy'])->name('destroy');
+    });
 
-    Route::post('logout', [AuthController::class, 'logout'])->name('logout');
+    // ======================
+    // Logout Web
+    // ======================
+    Route::post('/logout', [AuthController::class, 'webLogout'])->name('logout');
 });

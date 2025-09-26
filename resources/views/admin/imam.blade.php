@@ -7,16 +7,17 @@
     @if(session('success'))
     <div class="alert alert-success alert-dismissible">
         <ul>
-            {{session('success')}}
+            {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </ul>
     </div>
     @endif
+
     @if($errors->any())
     <div class="alert alert-danger alert-dismissible">
         <ul>
-            @foreach($errors -> all() as $error)
-            {{$error}}
+            @foreach($errors->all() as $error)
+                <li>{{ $error }}</li>
             @endforeach
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </ul>
@@ -30,8 +31,9 @@
                     <th scope="col">Id</th>
                     <th scope="col">Imam & Khotib</th>
                     <th scope="col">Muazin</th>
-                    <th scope="col">tanggal</th>
-                    <th scope="col">jenis</th>
+                    <th scope="col">Tanggal</th>
+                    <th scope="col">Jenis</th>
+                    <th scope="col">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -44,56 +46,47 @@
                     <td>{{ $imam->jenis }}</td>
                     <td>
                         <div class="btn-group">
-                            <form action="{{route('imam.delete',['id'=> $imam -> id])}}" method="post">
+                            <!-- Tombol hapus -->
+                            <form action="{{ route('imam.destroy', ['id' => $imam->id]) }}" method="POST">
                                 @csrf
-                                @method('delete')
+                                @method('DELETE')
                                 <button class="btn btn-danger btn-sm delete-btn">✕</button>
                             </form>
-                            <button class="btn btn-primary btn-sm edit-btn" data-bs-toggle="collapse"
-                                data-bs-target="#collapse-{{$loop -> index}}" aria-expanded="false " onclick="toggleEditForm({{ $imam->id }})"><i class="fa fa-edit"></i></button>
+                            <!-- Tombol edit -->
+                            <button class="btn btn-primary btn-sm edit-btn" onclick="toggleEditForm({{ $imam->id }})">
+                                <i class="fa fa-edit"></i>
+                            </button>
                         </div>
                     </td>
                 </tr>
+
+                <!-- Form edit -->
                 <tr id="edit-form-{{ $imam->id }}" style="display: none;">
                     <td colspan="6">
-                        <form action="{{route('imam.update',['id'=> $imam -> id])}}" method="POST">
+                        <form action="{{ route('imam.update', ['id' => $imam->id]) }}" method="POST">
                             @csrf
                             @method('PUT')
                             <div class="row g-3 align-items-center">
                                 <div class="col-md-3">
-                                    <input
-                                        type="text"
-                                        name="imam"
-                                        class="form-control"
-                                        placeholder="Keterangan"
-                                        value="{{ $imam->imam }}"
-                                        required>
+                                    <input type="text" name="imam" class="form-control"
+                                           value="{{ $imam->imam }}" required>
                                 </div>
                                 <div class="col-md-3">
-                                    <input
-                                        type="text"
-                                        name="muazin"
-                                        class="form-control"
-                                        placeholder="Keterangan"
-                                        value="{{ $imam->muazin }}"
-                                        required>
+                                    <input type="text" name="muazin" class="form-control"
+                                           value="{{ $imam->muazin }}" required>
                                 </div>
                                 <div class="col-md-2">
-                                    <input
-                                        type="date"
-                                        name="tanggal"
-                                        class="form-control"
-                                        value="{{ $imam->tanggal }}"
-                                        required>
+                                    <input type="date" name="tanggal" class="form-control"
+                                           value="{{ $imam->tanggal }}" required>
                                 </div>
                                 <div class="col-md-2">
-                                <select name="jenis" class="form-select" required>
-                                        <option value="sholat fardu" {{ $imam->jenis == 'sholat fardu' ? 'selected' : '' }}>Sholat fardu</option>
-                                        <option value="sholat jumat" {{ $imam->jenis == 'sholat jumat' ? 'selected' : '' }}>Sholat jumat</option>
+                                    <select name="jenis" class="form-select" required>
+                                        <option value="sholat fardu" {{ $imam->jenis == 'sholat fardu' ? 'selected' : '' }}>Sholat Fardu</option>
+                                        <option value="sholat jumat" {{ $imam->jenis == 'sholat jumat' ? 'selected' : '' }}>Sholat Jumat</option>
                                         <option value="sholat teraweh" {{ $imam->jenis == 'sholat teraweh' ? 'selected' : '' }}>Sholat Teraweh</option>
                                     </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <button type="submit" class="btn btn-success btn-sm">Simpan</button>
                                     <button type="button" class="btn btn-secondary btn-sm" onclick="toggleEditForm({{ $imam->id }})">Batal</button>
                                 </div>
@@ -103,37 +96,40 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="text-center">Data tidak tersedia</td>
+                    <td colspan="6" class="text-center">Data tidak tersedia</td>
                 </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
-    <form class="row g-3 justify-content-center needs-validation my-5" action="{{route('imam.input')}}" method="post">
+
+    <!-- Form tambah imam -->
+    <form class="row g-3 justify-content-center needs-validation my-5" 
+          action="{{ route('imam.store') }}" method="POST">
         @csrf
         <h2>Input data imam & muazin</h2>
         <div class="col-md-3">
-            <label for="validationCustom01" class="form-label">Nama Imam & Khotib</label>
-            <input type="text" class="form-control" id="validationCustom01" name="imam" required>
+            <label class="form-label">Nama Imam & Khotib</label>
+            <input type="text" class="form-control" name="imam" required>
         </div>
         <div class="col-md-3">
-            <label for="validationCustom02" class="form-label">Nama Muazin</label>
-            <input type="text" class="form-control" id="validationCustom02" name="muazin" required>
+            <label class="form-label">Nama Muazin</label>
+            <input type="text" class="form-control" name="muazin" required>
         </div>
         <div class="col-md-3">
-            <label for="validationCustom04" class="form-label">tanggal</label>
-            <input type="date" class="form-control" id="validationCustom02" name="tanggal" required>
+            <label class="form-label">Tanggal</label>
+            <input type="date" class="form-control" name="tanggal" required>
         </div>
         <div class="col-md-3">
-            <label for="validationCustom04" class="form-label">Jenis</label>
+            <label class="form-label">Jenis</label>
             <select name="jenis" class="form-select" required>
-                <option value="sholat fardu" >Sholat Fardu</option>
-                <option value="sholat jumat" >Sholat Jumat</option>
+                <option value="sholat fardu">Sholat Fardu</option>
+                <option value="sholat jumat">Sholat Jumat</option>
                 <option value="sholat teraweh">Sholat Teraweh</option>
             </select>
         </div>
         <div class="col-md-9">
-            <button class="btn btn-primary" style="width: 100%;" type="submit">Submit form</button>
+            <button class="btn btn-primary w-100" type="submit">Submit form</button>
         </div>
     </form>
 </div>
